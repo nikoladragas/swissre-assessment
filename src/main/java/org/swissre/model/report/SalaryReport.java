@@ -35,11 +35,11 @@ public class SalaryReport {
         this.managerSalary = managerSalary;
         this.avgSubordinateSalary = avgSubordinateSalary;
 
-        if (managerSalary > avgSubordinateSalary * ThresholdConstants.UPPER_THRESHOLD) {
-            this.salaryDifference = managerSalary - avgSubordinateSalary * ThresholdConstants.UPPER_THRESHOLD;
+        if (managerSalary > avgSubordinateSalary * ThresholdConstants.UPPER) {
+            this.salaryDifference = managerSalary - avgSubordinateSalary * ThresholdConstants.UPPER;
             this.adverb = "more than";
-        } else if (managerSalary < avgSubordinateSalary * ThresholdConstants.LOWER_THRESHOLD) {
-            this.salaryDifference = avgSubordinateSalary * ThresholdConstants.LOWER_THRESHOLD - managerSalary;
+        } else if (managerSalary < avgSubordinateSalary * ThresholdConstants.LOWER) {
+            this.salaryDifference = avgSubordinateSalary * ThresholdConstants.LOWER - managerSalary;
             this.adverb = "less than";
         } else {
             this.salaryDifference = 0.0;
@@ -47,8 +47,7 @@ public class SalaryReport {
         }
     }
 
-    @Override
-    public String toString() {
+    public String prettyPrint() {
         return "Name: " + this.manager.getFirstName() + " " + this.manager.getLastName() +
                 "\nId: " + this.manager.getId() +
                 "\nEarning " + Math.abs(this.salaryDifference) + " " + this.adverb + " they should.\n";

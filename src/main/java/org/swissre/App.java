@@ -38,13 +38,13 @@ public class App
 
         System.out.println("Managers with inappropriate salaries\n");
         for (SalaryReport report : salaryReports) {
-            System.out.println(report);
+            System.out.println(report.prettyPrint());
         }
 
         System.out.println("----------------------------------------------\n");
         System.out.println("Employees with inappropriate manager hierarchy\n");
         for (ReportingLineReport report : reportingLineReports) {
-            System.out.println(report);
+            System.out.println(report.prettyPrint());
 
         }
     }

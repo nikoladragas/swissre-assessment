@@ -46,12 +46,12 @@ public class EmployeeAnalyzerImpl implements EmployeeAnalyzer {
     public List<ReportingLineReport> getEmployeesWithInappropriateReportingLine() {
         List<ReportingLineReport> reports = new ArrayList<>();
         getManagersToCeoCount().forEach((employeeId, managerCount) -> {
-            if (managerCount <= ThresholdConstants.MGR_COUNT_THRESHOLD) {
+            if (managerCount <= ThresholdConstants.MGR_COUNT) {
                 return;
             }
             Employee employee = getEmployeeById(employeeId);
             if (employee != null) {
-                reports.add(new ReportingLineReport(employee, managerCount - ThresholdConstants.MGR_COUNT_THRESHOLD));
+                reports.add(new ReportingLineReport(employee, managerCount - ThresholdConstants.MGR_COUNT));
             }
         });
         return reports;
@@ -67,7 +67,7 @@ public class EmployeeAnalyzerImpl implements EmployeeAnalyzer {
     }
 
     private boolean isSalaryInappropriate(Long managerSalary, Double avgSalary) {
-        return managerSalary > avgSalary * ThresholdConstants.UPPER_THRESHOLD || managerSalary < avgSalary * ThresholdConstants.LOWER_THRESHOLD;
+        return managerSalary > avgSalary * ThresholdConstants.UPPER || managerSalary < avgSalary * ThresholdConstants.LOWER;
     }
 
     private Employee getEmployeeById(Long id) {
@@ -92,31 +92,40 @@ public class EmployeeAnalyzerImpl implements EmployeeAnalyzer {
                 return;
             }
 
-            Employee currentEmployee = getEmployeeById(employee.getManagerId());
+            Integer mgrCount = countManagersInHierarchy(employee);
+            if (mgrCount != null) {
+                managersToCEO.put(employee.getId(), mgrCount);
+            }
+        });
+        return managersToCEO;
+    }
+
+    /**
+     * Count managers between specified employee and CEO
+     * @param employee - specifies from which employee to count from
+     * @return
+     */
+    private Integer countManagersInHierarchy(Employee employee) {
+        Employee currentEmployee = getEmployeeById(employee.getManagerId());
+        if (currentEmployee == null) {
+            System.out.println("Skipping processing this employee - Employee's manager references non-existent employee.");
+            return null;
+        }
+
+        Integer managersCount = 0;
+        while (currentEmployee.getManagerId() != null) {
+            managersCount++;
+            if (employee.getId().equals(currentEmployee.getId())) {
+                System.out.println("Skipping processing this employee - Employee can't be in their own manager hierarchy.");
+                return null;
+            }
+            currentEmployee = getEmployeeById(currentEmployee.getManagerId());
             if (currentEmployee == null) {
                 System.out.println("Skipping processing this employee - Employee's manager references non-existent employee.");
-                return;
+                return null;
             }
-
-            Integer managersCount = 0;
-            Long currentEmployeeId = employee.getId();
-            while (currentEmployee.getManagerId() != null) {
-                managersCount++;
-                if (currentEmployeeId.equals(currentEmployee.getId())) {
-                    System.out.println("Skipping processing this employee - Employee can't be in their own manager hierarchy.");
-                    return;
-                }
-                currentEmployee = getEmployeeById(currentEmployee.getManagerId());
-                if (currentEmployee == null) {
-                    System.out.println("Skipping processing this employee - Employee's manager references non-existent employee.");
-                    return;
-                }
-            }
-
-            managersToCEO.put(currentEmployeeId, managersCount);
-        });
-
-        return managersToCEO;
+        }
+        return managersCount;
     }
 
 }

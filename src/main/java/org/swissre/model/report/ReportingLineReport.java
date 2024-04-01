@@ -19,8 +19,7 @@ public class ReportingLineReport {
         this.sufficientManagersCount = sufficientManagersCount;
     }
 
-    @Override
-    public String toString() {
+    public String prettyPrint() {
         return "Name: " + this.employee.getFirstName() + " " + this.employee.getLastName() +
                 "\nId: " + this.employee.getId() +
                 "\nHas " + this.sufficientManagersCount + " more managers in hierarchy than they should.\n";
