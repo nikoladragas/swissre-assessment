@@ -2,7 +2,7 @@ package org.swissre.model.report;
 
 import org.swissre.model.Employee;
 
-public class InappropriateReportingLineReport {
+public class ReportingLineReport {
     private final Employee employee;
     private final Integer sufficientManagersCount;
 
@@ -14,7 +14,7 @@ public class InappropriateReportingLineReport {
         return sufficientManagersCount;
     }
 
-    public InappropriateReportingLineReport(Employee employee, Integer sufficientManagersCount) {
+    public ReportingLineReport(Employee employee, Integer sufficientManagersCount) {
         this.employee = employee;
         this.sufficientManagersCount = sufficientManagersCount;
     }

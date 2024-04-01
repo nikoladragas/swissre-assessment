@@ -1,12 +1,13 @@
 package org.swissre.csv;
 
-import org.swissre.EmployeeParser;
+import org.swissre.parser.EmployeeParser;
 import org.swissre.exception.EmployeeValidationException;
 import org.swissre.model.Employee;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CsvEmployeeParser implements EmployeeParser {
     private final CsvReader reader;
@@ -17,8 +18,8 @@ public class CsvEmployeeParser implements EmployeeParser {
         this.validator = validator;
     }
 
-    public List<Employee> parseEmployees() throws IOException, EmployeeValidationException {
-        List<Employee> employees = new ArrayList<>();
+    public Map<Long, Employee> parseEmployees() throws IOException, EmployeeValidationException {
+        Map<Long, Employee> employees = new HashMap<>();
         String[] line = reader.readLine();
         validator.validateHeaders(line);
 
@@ -26,7 +27,9 @@ public class CsvEmployeeParser implements EmployeeParser {
             validator.validateLine(line);
             Employee employee = new Employee(Long.parseLong(line[0]), line[1], line[2],
                     Long.parseLong(line[3]), line.length == 5 ? Long.parseLong(line[4]) : null);
-            employees.add(employee);
+            if (employee.getId() != null) {
+                employees.put(employee.getId(), employee);
+            }
         }
         return employees;
     }

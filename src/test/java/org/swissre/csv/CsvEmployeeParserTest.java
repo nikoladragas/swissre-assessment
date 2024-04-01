@@ -8,7 +8,7 @@ import org.swissre.exception.EmployeeValidationException;
 import org.swissre.model.Employee;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -46,7 +46,7 @@ class CsvEmployeeParserTest {
         doCallRealMethod().when(validator).validateLine(any());
 
         // When
-        List<Employee> employees = parser.parseEmployees();
+        Map<Long, Employee> employees = parser.parseEmployees();
 
         // Then
         assertEquals(0, employees.size());
@@ -64,7 +64,7 @@ class CsvEmployeeParserTest {
         doCallRealMethod().when(validator).validateLine(any());
 
         // When
-        List<Employee> employees = parser.parseEmployees();
+        Map<Long, Employee> employees = parser.parseEmployees();
 
         // Then
         assertEquals(2, employees.size());

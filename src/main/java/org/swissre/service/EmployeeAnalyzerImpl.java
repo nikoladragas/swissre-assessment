@@ -2,17 +2,17 @@ package org.swissre.service;
 
 import org.swissre.model.Employee;
 import org.swissre.model.ThresholdConstants;
-import org.swissre.model.report.InappropriateReportingLineReport;
-import org.swissre.model.report.InappropriateSalaryReport;
+import org.swissre.model.report.ReportingLineReport;
+import org.swissre.model.report.SalaryReport;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class EmployeeAnalyzerImpl implements EmployeeAnalyzer {
 
-    private final List<Employee> employees;
+    private final Map<Long, Employee> employees;
 
-    public EmployeeAnalyzerImpl(List<Employee> employees) {
+    public EmployeeAnalyzerImpl(Map<Long, Employee> employees) {
         this.employees = employees;
     }
 
@@ -22,15 +22,16 @@ public class EmployeeAnalyzerImpl implements EmployeeAnalyzer {
      * @return A list of InappropriateSalaryReport instances containing details of managers with inappropriate salaries.
      */
     @Override
-    public List<InappropriateSalaryReport> getManagersWithInappropriateSalary() {
-        List<InappropriateSalaryReport> reports = new ArrayList<>();
+    public List<SalaryReport> getManagersWithInappropriateSalary() {
+        List<SalaryReport> reports = new ArrayList<>();
 
         getAvgSubordinateSalaryPerManager().forEach((managerId, avgSalary) ->
-            getEmployeeById(managerId).ifPresent(manager -> {
-                if (isSalaryInappropriate(manager.getSalary(), avgSalary)) {
-                    reports.add(new InappropriateSalaryReport(manager, manager.getSalary(), avgSalary));
+                {
+                    Employee manager = getEmployeeById(managerId);
+                    if (manager != null && isSalaryInappropriate(manager.getSalary(), avgSalary)) {
+                        reports.add(new SalaryReport(manager, manager.getSalary(), avgSalary));
+                    }
                 }
-            })
         );
         return reports;
     }
@@ -42,31 +43,38 @@ public class EmployeeAnalyzerImpl implements EmployeeAnalyzer {
      * @return A list of InappropriateReportingLineReport instances containing details of employees with inappropriate reporting lines.
      */
     @Override
-    public List<InappropriateReportingLineReport> getEmployeesWithInappropriateReportingLine() {
-        List<InappropriateReportingLineReport> reports = new ArrayList<>();
+    public List<ReportingLineReport> getEmployeesWithInappropriateReportingLine() {
+        List<ReportingLineReport> reports = new ArrayList<>();
         getManagersToCeoCount().forEach((employeeId, managerCount) -> {
             if (managerCount <= ThresholdConstants.MGR_COUNT_THRESHOLD) {
                 return;
             }
-            getEmployeeById(employeeId).ifPresent(employee ->
-                    reports.add(new InappropriateReportingLineReport(employee, managerCount - ThresholdConstants.MGR_COUNT_THRESHOLD))
-            );
+            Employee employee = getEmployeeById(employeeId);
+            if (employee != null) {
+                reports.add(new ReportingLineReport(employee, managerCount - ThresholdConstants.MGR_COUNT_THRESHOLD));
+            }
         });
         return reports;
     }
 
     private Map<Long, Double> getAvgSubordinateSalaryPerManager() {
-        return this.employees.stream()
+        if (this.employees == null) {
+            return new HashMap<>();
+        }
+        return this.employees.values().stream()
                 .filter(employee -> employee.getManagerId() != null)
                 .collect(Collectors.groupingBy(Employee::getManagerId, Collectors.averagingDouble(Employee::getSalary)));
     }
 
     private boolean isSalaryInappropriate(Long managerSalary, Double avgSalary) {
-        return managerSalary > avgSalary * ThresholdConstants.UPPER || managerSalary < avgSalary * ThresholdConstants.LOWER;
+        return managerSalary > avgSalary * ThresholdConstants.UPPER_THRESHOLD || managerSalary < avgSalary * ThresholdConstants.LOWER_THRESHOLD;
     }
 
-    private Optional<Employee> getEmployeeById(Long id) {
-        return this.employees.stream().filter(employee -> employee.getId().equals(id)).findAny();
+    private Employee getEmployeeById(Long id) {
+        if (this.employees == null) {
+            return null;
+        }
+        return this.employees.getOrDefault(id, null);
     }
 
     /**
@@ -74,15 +82,35 @@ public class EmployeeAnalyzerImpl implements EmployeeAnalyzer {
      */
     private Map<Long, Integer> getManagersToCeoCount() {
         Map<Long, Integer> managersToCEO = new HashMap<>();
+        if (this.employees == null) {
+            return managersToCEO;
+        }
 
-        employees.forEach(employee -> {
+        this.employees.values().forEach(employee -> {
+            // CEO doesn't report
+            if (employee.getManagerId() == null) {
+                return;
+            }
+
+            Employee currentEmployee = getEmployeeById(employee.getManagerId());
+            if (currentEmployee == null) {
+                System.out.println("Skipping processing this employee - Employee's manager references non-existent employee.");
+                return;
+            }
+
             Integer managersCount = 0;
             Long currentEmployeeId = employee.getId();
-            Employee currentEmployee = getEmployeeById(employee.getManagerId()).orElse(null);
-
-            while (currentEmployee != null && currentEmployee.getManagerId() != null) {
+            while (currentEmployee.getManagerId() != null) {
                 managersCount++;
-                currentEmployee = getEmployeeById(currentEmployee.getManagerId()).orElse(null);
+                if (currentEmployeeId.equals(currentEmployee.getId())) {
+                    System.out.println("Skipping processing this employee - Employee can't be in their own manager hierarchy.");
+                    return;
+                }
+                currentEmployee = getEmployeeById(currentEmployee.getManagerId());
+                if (currentEmployee == null) {
+                    System.out.println("Skipping processing this employee - Employee's manager references non-existent employee.");
+                    return;
+                }
             }
 
             managersToCEO.put(currentEmployeeId, managersCount);

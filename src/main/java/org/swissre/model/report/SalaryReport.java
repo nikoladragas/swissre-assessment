@@ -3,7 +3,7 @@ package org.swissre.model.report;
 import org.swissre.model.Employee;
 import org.swissre.model.ThresholdConstants;
 
-public class InappropriateSalaryReport {
+public class SalaryReport {
     private final Employee manager;
     private final Long managerSalary;
     private final Double avgSubordinateSalary;
@@ -14,6 +14,14 @@ public class InappropriateSalaryReport {
         return manager;
     }
 
+    public Long getManagerSalary() {
+        return managerSalary;
+    }
+
+    public Double getAvgSubordinateSalary() {
+        return avgSubordinateSalary;
+    }
+
     public Double getSalaryDifference() {
         return salaryDifference;
     }
@@ -22,20 +30,20 @@ public class InappropriateSalaryReport {
         return adverb;
     }
 
-    public InappropriateSalaryReport(Employee manager, Long managerSalary, Double avgSubordinateSalary) {
+    public SalaryReport(Employee manager, Long managerSalary, Double avgSubordinateSalary) {
         this.manager = manager;
         this.managerSalary = managerSalary;
         this.avgSubordinateSalary = avgSubordinateSalary;
 
-        if (managerSalary > avgSubordinateSalary * ThresholdConstants.UPPER) {
-            this.salaryDifference = managerSalary - avgSubordinateSalary * ThresholdConstants.UPPER;
-            this.adverb = "more";
-        } else if (managerSalary < avgSubordinateSalary * ThresholdConstants.LOWER) {
-            this.salaryDifference = avgSubordinateSalary * ThresholdConstants.LOWER - managerSalary;
-            this.adverb = "less";
+        if (managerSalary > avgSubordinateSalary * ThresholdConstants.UPPER_THRESHOLD) {
+            this.salaryDifference = managerSalary - avgSubordinateSalary * ThresholdConstants.UPPER_THRESHOLD;
+            this.adverb = "more than";
+        } else if (managerSalary < avgSubordinateSalary * ThresholdConstants.LOWER_THRESHOLD) {
+            this.salaryDifference = avgSubordinateSalary * ThresholdConstants.LOWER_THRESHOLD - managerSalary;
+            this.adverb = "less than";
         } else {
             this.salaryDifference = 0.0;
-            this.adverb = "";
+            this.adverb = "as";
         }
     }
 
@@ -43,6 +51,6 @@ public class InappropriateSalaryReport {
     public String toString() {
         return "Name: " + this.manager.getFirstName() + " " + this.manager.getLastName() +
                 "\nId: " + this.manager.getId() +
-                "\nEarning " + Math.abs(this.salaryDifference) + " " + this.adverb + " than they should.\n";
+                "\nEarning " + Math.abs(this.salaryDifference) + " " + this.adverb + " they should.\n";
     }
 }
